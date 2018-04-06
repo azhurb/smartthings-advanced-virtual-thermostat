@@ -70,6 +70,8 @@
 
  def temperatureHandler(evt)
  {
+ 	log.debug "Current temperature ${evt.doubleValue}"
+
  	def isActive = hasBeenRecentMotion()
 
  	if (isActive) {
@@ -90,60 +92,60 @@
  		if (lastTemp != null) {
  			evaluate(lastTemp, setpoint)
  		}
- 		} else if (evt.value == "inactive") {
- 			def isActive = hasBeenRecentMotion()
- 			log.debug "INACTIVE($isActive)"
- 			if (isActive || emergencySetpoint) {
- 				def lastTemp = sensor.currentTemperature
- 				if (lastTemp != null) {
- 					evaluate(lastTemp, isActive ? setpoint : emergencySetpoint)
- 				}
- 			}
- 			else {
- 				outlets.off()
- 			}
- 		}
- 	}
-
- 	def modeChangeHandler(evt)
- 	{
- 		log.debug "Mode changed to ${evt.value}"
-
- 		def isActive = hasBeenRecentMotion()
-
- 		if (isActive) {
- 			evaluate(sensor.currentTemperature, isActive ? setpoint : emergencySetpoint)
- 		}
- 		else if (!motion) {
- 			evaluate(sensor.currentTemperature, setpoint)
- 		}
- 		else {
- 			outlets.off()
- 		}
- 	}
-
- 	private evaluate(currentTemp, desiredTemp)
- 	{
- 		log.debug "EVALUATE($currentTemp, $desiredTemp)"
- 		def threshold = 0.5
- 		if (mode == "cool") {
-	// air conditioner
-	if (currentTemp - desiredTemp >= threshold) {
-		outlets.on()
+	} else if (evt.value == "inactive") {
+		def isActive = hasBeenRecentMotion()
+		log.debug "INACTIVE($isActive)"
+		if (isActive || emergencySetpoint) {
+			def lastTemp = sensor.currentTemperature
+			if (lastTemp != null) {
+				evaluate(lastTemp, isActive ? setpoint : emergencySetpoint)
+			}
+		}
+		else {
+			outlets.off()
+		}
 	}
-	else if (desiredTemp - currentTemp >= threshold) {
+}
+
+def modeChangeHandler(evt)
+{
+	log.debug "Mode changed to ${evt.value}"
+
+	def isActive = hasBeenRecentMotion()
+
+	if (isActive) {
+		evaluate(sensor.currentTemperature, isActive ? setpoint : emergencySetpoint)
+	}
+	else if (!motion) {
+		evaluate(sensor.currentTemperature, setpoint)
+	}
+	else {
 		outlets.off()
 	}
 }
-else {
-	// heater
-	if (desiredTemp - currentTemp >= threshold) {
-		outlets.on()
+
+private evaluate(currentTemp, desiredTemp)
+{
+	log.debug "EVALUATE($currentTemp, $desiredTemp)"
+	def threshold = 0.5
+	if (mode == "cool") {
+		// air conditioner
+		if (currentTemp - desiredTemp >= threshold) {
+			outlets.on()
+		}
+		else if (desiredTemp - currentTemp >= threshold) {
+			outlets.off()
+		}
 	}
-	else if (currentTemp - desiredTemp >= threshold) {
-		outlets.off()
+	else {
+		// heater
+		if (desiredTemp - currentTemp >= threshold) {
+			outlets.on()
+		}
+		else if (currentTemp - desiredTemp >= threshold) {
+			outlets.off()
+		}
 	}
-}
 }
 
 private hasBeenRecentMotion()
