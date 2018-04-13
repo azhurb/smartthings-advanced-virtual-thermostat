@@ -32,8 +32,11 @@
  	section("Select the heater or air conditioner outlet(s)... "){
  		input "outlets", "capability.switch", title: "Outlets", multiple: true
  	}
- 	section("Set the desired temperature..."){
- 		input "setpoint", "decimal", title: "Set Temp"
+	section("Set the Min temperature..."){
+ 		input "desiredMinTemp", "decimal", title: "Set Temp"
+ 	}
+	section("Set the Max temperature..."){
+ 		input "desiredMaxTemp", "decimal", title: "Set Temp"
  	}
  	section("When there's been movement from (optional, leave blank to not require motion)..."){
  		input "motion", "capability.motionSensor", title: "Motion", required: false
@@ -75,10 +78,10 @@
  	def isActive = hasBeenRecentMotion()
 
  	if (isActive) {
- 		evaluate(evt.doubleValue, isActive ? setpoint : emergencySetpoint)
+ 		evaluate(evt.doubleValue, isActive)
  	}
  	else if (!motion) {
- 		evaluate(evt.doubleValue, setpoint)
+ 		evaluate(evt.doubleValue, isActive)
  	}
  	else {
  		outlets.off()
@@ -87,18 +90,19 @@
 
  def motionHandler(evt)
  {
+	def isActive = hasBeenRecentMotion()
+
  	if (evt.value == "active") {
  		def lastTemp = sensor.currentTemperature
  		if (lastTemp != null) {
- 			evaluate(lastTemp, setpoint)
+ 			evaluate(lastTemp, isActive)
  		}
 	} else if (evt.value == "inactive") {
-		def isActive = hasBeenRecentMotion()
 		log.debug "INACTIVE($isActive)"
 		if (isActive || emergencySetpoint) {
 			def lastTemp = sensor.currentTemperature
 			if (lastTemp != null) {
-				evaluate(lastTemp, isActive ? setpoint : emergencySetpoint)
+				evaluate(lastTemp, isActive)
 			}
 		}
 		else {
@@ -114,35 +118,35 @@ def modeChangeHandler(evt)
 	def isActive = hasBeenRecentMotion()
 
 	if (isActive) {
-		evaluate(sensor.currentTemperature, isActive ? setpoint : emergencySetpoint)
+		evaluate(sensor.currentTemperature)
 	}
 	else if (!motion) {
-		evaluate(sensor.currentTemperature, setpoint)
+		evaluate(sensor.currentTemperature)
 	}
 	else {
 		outlets.off()
 	}
 }
 
-private evaluate(currentTemp, desiredTemp)
+private evaluate(currentTemp, isActive)
 {
-	log.debug "EVALUATE($currentTemp, $desiredTemp)"
-	def threshold = 0.5
+	log.debug "EVALUATE($currentTemp, $isActive)"
+
 	if (mode == "cool") {
 		// air conditioner
-		if (currentTemp - desiredTemp >= threshold) {
+		if (currentTemp >= desiredMaxTemp) {
 			outlets.on()
 		}
-		else if (desiredTemp - currentTemp >= threshold) {
+		else if (currentTemp < desiredMinTemp) {
 			outlets.off()
 		}
 	}
 	else {
 		// heater
-		if (desiredTemp - currentTemp >= threshold) {
+		if (currentTemp <= desiredMinTemp) {
 			outlets.on()
 		}
-		else if (currentTemp - desiredTemp >= threshold) {
+		else if (currentTemp > desiredMaxTemp) {
 			outlets.off()
 		}
 	}
