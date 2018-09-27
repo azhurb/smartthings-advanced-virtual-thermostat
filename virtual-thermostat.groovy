@@ -33,10 +33,10 @@
  		input "outlets", "capability.switch", title: "Outlets", multiple: true
  	}
 	section("Set the Min temperature..."){
- 		input "desiredMinTemp", "decimal", title: "Set Temp"
+ 		input "desiredMinTemp", "decimal", title: "Set Min Temp"
  	}
 	section("Set the Max temperature..."){
- 		input "desiredMaxTemp", "decimal", title: "Set Temp"
+ 		input "desiredMaxTemp", "decimal", title: "Set Max Temp"
  	}
  	section("When there's been movement from (optional, leave blank to not require motion)..."){
  		input "motion", "capability.motionSensor", title: "Motion", required: false
