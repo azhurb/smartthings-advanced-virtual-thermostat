@@ -137,7 +137,7 @@ private evaluate(currentTemp, isActive)
 		if (currentTemp >= desiredMaxTemp) {
 			outlets.on()
 		}
-		else if (currentTemp < desiredMinTemp) {
+		else if (currentTemp <= desiredMinTemp) {
 			outlets.off()
 		}
 	}
@@ -146,7 +146,7 @@ private evaluate(currentTemp, isActive)
 		if (currentTemp <= desiredMinTemp) {
 			outlets.on()
 		}
-		else if (currentTemp > desiredMaxTemp) {
+		else if (currentTemp => desiredMaxTemp) {
 			outlets.off()
 		}
 	}
